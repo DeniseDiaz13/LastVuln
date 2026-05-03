@@ -1,0 +1,22 @@
+[project]
+name = "lastvuln"
+version = "0.1.0"
+description = "CLI to scan package ecosystems for vulnerabilities"
+readme = "README.md"
+authors = [
+    { name="Denise Díaz", git="https://github.com/DeniseDiaz13" }
+]
+dependencies = [
+    "requests>=2.32",
+    "rich>=14.3",
+    "typer>=0.24"
+]
+license = {text = "MIT"}
+requires-python = ">=3.10"
+
+[project.scripts]
+lastvuln = "lastvuln_cli.main:main"
+
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
