@@ -1,40 +1,40 @@
 import typer
 from rich.console import Console
-from .client import search_ecosystem
+from .cache import init_db
+from .client import search_for_ecosystem
 from .formatter import format_vulnerabilities
-from .clean_inputs import clean_input
+from .validate_inputs import *
 
 console = Console()
 app = typer.Typer()
 
-def status(no_status: int):
-    if no_status == 401:
-        return f"\n [red]Invalid token.[/red]" 
-    elif no_status == 422:
-        return f"\n [red]Validation failed, or the endpoint has been spammed.[/red]" 
-    elif no_status == 429:
-        return f"\n [red]Too many requests.[/red]"
-    elif no_status == 404:
-        return f"\n [red]Resource not found.[/red]"
 
 @app.command()
-def search(ecosystem: str = typer.Option(..., "--ecosystem", "-e"), n_results: int = typer.Option(5, "--n_results", "-n")):
+def search(
+    ecosystem: str = typer.Option(..., "--ecosystem", "-e"),
+    n_rows: int = typer.Option(10, "--n_rows", "-n"),
+    year: int | None = typer.Option(None, "--year-published", "-y"),
+    month: int | None = typer.Option(None, "--month-published", "-m"),
+    severity: str | None = typer.Option(None, "--severity", "-s"),
+):
     try:
-        ecosystem_clean = clean_input(ecosystem)
-        data = search_ecosystem(ecosystem_clean, n_results)
-        
-        if isinstance(data, int):
-            message = status(data)
-            console.print(message)
+        clean_ecosystem = ecosystem.strip().lower()
+        validate_inputs(clean_ecosystem, year, month, severity)
+        data = search_for_ecosystem(clean_ecosystem, n_rows, year, month, severity)
+
+        if data["status"] != 200:
+            console.print(f"\n[red]{data['message']}[/red]")
             return
 
-        if len(data) <= 0:
-            console.print("\n [gray]No results found.[/gray]")
+        if not data["data"]:
+            console.print("\n[gray]No results found.[/gray]")
             return
 
-        output = format_vulnerabilities(data)
+        output = format_vulnerabilities(data["data"])
 
-        console.print(f"\n Showing {len(data)} results for ecosystem [cyan]{ecosystem_clean}[/cyan]\n")
+        console.print(
+            f"\n Showing {len(data['data'])} results for ecosystem [cyan]{clean_ecosystem}[/cyan]\n"
+        )
 
         console.print(output)
 
@@ -43,8 +43,8 @@ def search(ecosystem: str = typer.Option(..., "--ecosystem", "-e"), n_results: i
         raise typer.Exit(code=1)
 
 
-
 def main():
+    init_db()
     app()
 
 

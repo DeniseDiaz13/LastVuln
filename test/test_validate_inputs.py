@@ -1,0 +1,63 @@
+import pytest
+from lastvuln_cli.validate_inputs import validate_inputs
+from lastvuln_cli.client import build_month_range, search_for_ecosystem
+
+
+def test_invalid_month():
+    with pytest.raises(ValueError) as exc:
+        validate_inputs("pip", 2024, 13, None)
+
+    assert "month" in str(exc.value).lower()
+
+
+def test_invalid_year():
+    with pytest.raises(ValueError):
+        validate_inputs("pip", 1800, 5, None)
+
+
+def test_invalid_ecosystem():
+    with pytest.raises(ValueError):
+        validate_inputs("", 2024, 5, None)
+
+
+def test_year_without_month():
+    with pytest.raises(ValueError):
+        validate_inputs("pip", 2024, None, None)
+
+
+def test_month_without_year():
+    with pytest.raises(ValueError):
+        validate_inputs("pip", None, 5, None)
+
+
+def test_invalid_severity():
+    with pytest.raises(ValueError):
+        validate_inputs("pip", None, None, "six-seven")
+
+
+def test_valid_inputs():
+    validate_inputs("pip", 2025, 7, "critical")
+
+
+def test_valid_inputs_without_date():
+    validate_inputs("pip", None, None, None)
+
+
+def test_leap_year():
+    result = build_month_range(2024, 2)
+
+    assert result == "2024-02-01..2024-02-29"
+
+
+def test_non_leap_year():
+    result = build_month_range(2025, 2)
+
+    assert result == "2025-02-01..2025-02-28"
+
+
+def test_more_than_50():
+    result = search_for_ecosystem("pip", 51, None, None)
+
+    assert result["status"] == 400
+    assert result["message"] == "Maximum 50 records can be displayed on console"
+    assert result["data"] == []
