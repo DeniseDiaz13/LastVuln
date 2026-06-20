@@ -8,7 +8,6 @@ CACHE_TTL = 24  # hours
 
 
 def init_db() -> None:
-    print("init db")
     conn = sqlite3.connect(DB_NAME)
 
     conn.execute("""
@@ -41,7 +40,7 @@ def save_cache(key: str, data: dict[str, Any]) -> None:
             ?
         )
         """,
-        (key, json.dumps(data), datetime.now()),
+        (key, json.dumps(data), datetime.now().isoformat()),
     )
 
     conn.commit()
