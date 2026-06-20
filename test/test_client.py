@@ -266,7 +266,7 @@ def test_search_no_vulnerabilities(mock_get):
 
     mock_get.return_value = mock_response
 
-    result = search_for_ecosystem("npm", 2, 2025, 7)
+    result = search_for_ecosystem("npm", 2, 2025, 1)
 
     assert result["status"] == 200
     assert result["message"] == ""

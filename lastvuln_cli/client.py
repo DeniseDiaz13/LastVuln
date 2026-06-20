@@ -3,7 +3,8 @@ import requests
 from dotenv import load_dotenv
 import os
 from calendar import monthrange
-from .cache import get_cache, save_cache
+from typing import Any
+from .cache import get_cache, save_cache, cache_is_expired
 
 load_dotenv()
 
@@ -15,16 +16,17 @@ def build_month_range(year: int, month: int) -> str:
     return f"{year}-{month:02d}-01..{year}-{month:02d}-{last_day:02d}"
 
 
-def consult(ecosystem, n, year, month, severity):
+def consult(ecosystem: str, n: int, year: int | None, month: int | None, severity: str | None) -> dict[str, Any]:
     if not GITHUB_TOKEN:
         return {"status": 500, "message": "GitHub token not configured", "data": []}
-    
-    cache_key = f"{ecosystem}:{year}:{month}:{n}"
+
+    cache_key = f"{ecosystem}:{year}:{month}:{n}:{severity}"
 
     cached = get_cache(cache_key)
+    expired = cache_is_expired(cached)
 
-    if cached:
-        return {"status": 200, "message": "", "data": cached}
+    if cached and not expired:
+        return {"status": 200, "message": "", "data": cached["data"]}
 
     headers = {
         "Accept": "application/vnd.github+json",
@@ -59,15 +61,15 @@ def consult(ecosystem, n, year, month, severity):
         }
 
     save_cache(cache_key, data)
-    
+
     return {"status": 200, "message": "", "data": data}
 
 
-def format_data(result):
+def format_data(result: dict[str, Any]) -> dict[str, Any]:
     if result["status"] != 200:
         return result
 
-    rows = []
+    rows: list[dict[str, Any]] = []
 
     for advisory in result["data"]:
         cvss = advisory.get("cvss_severities", {})
@@ -109,7 +111,7 @@ def format_data(result):
     }
 
 
-def search_for_ecosystem(ecosystem, n = 5, year = None, month =  None, severity = None):
+def search_for_ecosystem(ecosystem: str, n: int = 5, year: int | None = None, month: int | None = None, severity: str | None = None) -> dict[str, Any]:
     if n > 50:
         return {
             "status": 400,

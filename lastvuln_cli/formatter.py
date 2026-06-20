@@ -1,10 +1,11 @@
 from rich.console import Console
 from rich.table import Table
+from typing import Any
 
 console = Console()
 
 
-def color_severity(severity):
+def color_severity(severity: str) -> str:
     if severity == "CRITICAL":
         return f"[red]{severity}[/red]"
     elif severity == "HIGH":
@@ -17,7 +18,7 @@ def color_severity(severity):
         return f"[gray]{severity}[/gray]"
 
 
-def color_score(score):
+def color_score(score: float) -> str:
     if score >= 0.1 and score <= 3.9:
         return f"[green]{score}[/green]"
     elif score >= 4.0 and score <= 6.9:
@@ -30,7 +31,7 @@ def color_score(score):
         return f"[gray]{score}[/gray]"
 
 
-def format_vulnerabilities(vulns) -> Table:
+def format_vulnerabilities(vulns: list[dict[str, Any]]) -> Table:
     table = Table(show_header=True, header_style="bold #A07AF0")
     table.add_column("Name Pakage", style="dim", width=20)
     table.add_column("Severity")
