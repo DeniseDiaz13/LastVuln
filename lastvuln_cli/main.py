@@ -4,6 +4,7 @@ from .cache import init_db
 from .client import search_for_ecosystem
 from .formatter import format_vulnerabilities
 from .validate_inputs import *
+from .export import *
 
 console = Console()
 app = typer.Typer()
@@ -16,10 +17,12 @@ def search(
     year: int | None = typer.Option(None, "--year-published", "-y"),
     month: int | None = typer.Option(None, "--month-published", "-m"),
     severity: str | None = typer.Option(None, "--severity", "-s"),
+    export: str | None = typer.Option(None, "--export", "-x"),
+    filename: str = typer.Option(f"vulns_export_{datetime.now():%Y-%m-%d_%H-%M-%S}", "--filename", "-f")
 ):
     try:
         clean_ecosystem = ecosystem.strip().lower()
-        validate_inputs(clean_ecosystem, year, month, severity)
+        validate_inputs(clean_ecosystem, year, month, severity, export)
         data = search_for_ecosystem(clean_ecosystem, n_rows, year, month, severity)
 
         if data["status"] != 200:
@@ -32,11 +35,13 @@ def search(
 
         output = format_vulnerabilities(data["data"])
 
-        console.print(
-            f"\n Showing {len(data['data'])} results for ecosystem [cyan]{clean_ecosystem}[/cyan]\n"
-        )
-
-        console.print(output)
+        if export:
+            console.print(f"\n Found {len(data['data'])} results for ecosystem [cyan]{clean_ecosystem}[/cyan]\n")
+            export_vulns(export, data["data"], filename)
+            console.print(f"\n[green] ✓ Export completed[/green] [cyan]({filename}.{export})[/cyan]")
+        else:
+            console.print(f"\n Showing {len(data['data'])} results for ecosystem [cyan]{clean_ecosystem}[/cyan]\n")
+            console.print(output)
 
     except ValueError as e:
         console.print(f"\n [red]Error:[/red] {e}")

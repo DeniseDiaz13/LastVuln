@@ -5,42 +5,47 @@ from lastvuln_cli.client import build_month_range, search_for_ecosystem
 
 def test_invalid_month():
     with pytest.raises(ValueError) as exc:
-        validate_inputs("pip", 2024, 13, None)
+        validate_inputs("pip", 2024, 13, None, "json")
 
     assert "month" in str(exc.value).lower()
 
 
 def test_invalid_year():
     with pytest.raises(ValueError):
-        validate_inputs("pip", 1800, 5, None)
+        validate_inputs("pip", 1800, 5, None, "csv")
 
 
 def test_invalid_ecosystem():
     with pytest.raises(ValueError):
-        validate_inputs("", 2024, 5, None)
+        validate_inputs("", 2024, 5, None, "json")
 
 
 def test_year_without_month():
     with pytest.raises(ValueError):
-        validate_inputs("pip", 2024, None, None)
+        validate_inputs("pip", 2024, None, None, "sarif")
 
 
 def test_month_without_year():
     with pytest.raises(ValueError):
-        validate_inputs("pip", None, 5, None)
+        validate_inputs("pip", None, 5, None, "sarif")
 
 
 def test_invalid_severity():
     with pytest.raises(ValueError):
-        validate_inputs("pip", None, None, "six-seven")
+        validate_inputs("pip", None, None, "six-seven", "json")
+
+
+def test_invalid_export():
+    with pytest.raises(ValueError):
+        validate_inputs("maven", None, None, "low", "something")
 
 
 def test_valid_inputs():
-    validate_inputs("pip", 2025, 7, "critical")
+    validate_inputs("pip", 2025, 7, "critical", "json")
 
 
 def test_valid_inputs_without_date():
-    validate_inputs("pip", None, None, None)
+    validate_inputs("pip", None, None, None, "sarif")
 
 
 def test_leap_year():

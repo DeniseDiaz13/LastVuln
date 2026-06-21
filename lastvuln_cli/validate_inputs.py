@@ -1,7 +1,7 @@
 from datetime import datetime
 
 
-def validate_inputs(ecosystem: str, year: int | None, month: int | None, severity: str | None):
+def validate_inputs(ecosystem: str, year: int | None, month: int | None, severity: str | None, export: str | None):
     validate_input_ecosystem(ecosystem)
 
     if (year is None) != (month is None):
@@ -15,6 +15,9 @@ def validate_inputs(ecosystem: str, year: int | None, month: int | None, severit
 
     if severity is not None:
         validate_input_severity(severity)
+
+    if export is not None:
+        validate_input_export(export)
 
 
 def validate_input_ecosystem(ecosystem: str):
@@ -37,3 +40,11 @@ def validate_input_severity(severity: str):
 
     if severity not in valid_inputs:
         raise ValueError(f"[red]Severity {severity} is not a possible value. Must be one of the following: {", ".join(valid_inputs)}[/red]")
+
+
+def validate_input_export(export: str):
+    valid_inputs = ["json", "sarif", "csv"]
+
+    if export not in valid_inputs:
+        raise ValueError(f"[red]Export {export} is not a possible value. Must be one of the following: {", ".join(valid_inputs)}[/red]")
+
