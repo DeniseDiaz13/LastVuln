@@ -43,7 +43,7 @@ def validate_input_severity(severity: str):
 
 
 def validate_input_export(export: str):
-    valid_inputs = ["json", "sarif", "csv", "xlsx"]
+    valid_inputs = ["json", "html", "csv", "xlsx", "md"]
 
     if export not in valid_inputs:
         raise ValueError(f"[red]Export {export} is not a possible value. Must be one of the following: {", ".join(valid_inputs)}[/red]")
