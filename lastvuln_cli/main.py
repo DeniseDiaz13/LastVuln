@@ -18,7 +18,7 @@ def search(
     month: int | None = typer.Option(None, "--month-published", "-m"),
     severity: str | None = typer.Option(None, "--severity", "-s"),
     export: str | None = typer.Option(None, "--export", "-x"),
-    filename: str = typer.Option(f"vulns_export_{datetime.now():%Y-%m-%d_%H-%M-%S}", "--filename", "-f")
+    filename: str | None = typer.Option(None, "--filename", "-f")
 ):
     try:
         clean_ecosystem = ecosystem.strip().lower()
@@ -37,6 +37,10 @@ def search(
 
         if export:
             console.print(f"\n Found {len(data['data'])} results for ecosystem [cyan]{clean_ecosystem}[/cyan]\n")
+            
+            if filename is None:
+                filename = f"vulns_export_{datetime.now():%Y-%m-%d_%H-%M-%S}"
+
             export_vulns(export, data["data"], filename)
             console.print(f"\n[green] ✓ Export completed[/green] [cyan]({filename}.{export})[/cyan]")
         else:
@@ -45,6 +49,10 @@ def search(
 
     except ValueError as e:
         console.print(f"\n [red]Error:[/red] {e}")
+        raise typer.Exit(code=1)
+
+    except Exception as e:
+        console.print(f"\n [red]Export failed:[/red] {e}")
         raise typer.Exit(code=1)
 
 

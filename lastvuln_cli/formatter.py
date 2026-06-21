@@ -33,7 +33,7 @@ def color_score(score: float) -> str:
 
 def format_vulnerabilities(vulns: list[dict[str, Any]]) -> Table:
     table = Table(show_header=True, header_style="bold #A07AF0")
-    table.add_column("Name Pakage", style="dim", width=20)
+    table.add_column("Name Pakage", style="dim")
     table.add_column("Severity")
     table.add_column("Score")
     table.add_column("EPSS")
@@ -59,5 +59,5 @@ def format_vulnerabilities(vulns: list[dict[str, Any]]) -> Table:
             vuln.get("ghsa_id", "N/A"),
             vuln.get("summary", "N/A"),
         )
-
+    
     return table
