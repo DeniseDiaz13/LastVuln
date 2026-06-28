@@ -1,8 +1,8 @@
 import json
-from types import SimpleNamespace
 import pandas as pd
 from openpyxl.styles import Font
 from datetime import datetime
+
 
 def export_vulns(export: str, data: list[dict], filename: str):
     if export == "json":
@@ -42,20 +42,53 @@ def export_excel(data: list[dict], filename: str):
 
 
 def export_markdown(data: list[dict], filename: str):
-    headers = list(data[0].keys())
+    headers = [k for k in data[0] if k != "summary"]
+
     header_line = "| " + " | ".join(headers) + " |\n"
     separator_line = "| " + " | ".join(["---"] * len(headers)) + " |\n"
+    severities = {
+        "critical": 0,
+        "high": 0,
+        "medium": 0,
+        "low": 0,
+        "none": 0,
+    }
 
     rows = []
     for item in data:
-        data_object = SimpleNamespace(**item)
-        values = [str(getattr(data_object, header, "")) for header in headers]
+        if item["published"]:
+            item["published"] = item["published"][:10]
+            severity = item.get("severity", "none").lower()
+            if severity in severities:
+                severities[severity] += 1
+            else:
+                severities["none"] += 1
+
+        values = [str(item.get(header, "")) for header in headers]
         rows.append("| " + " | ".join(values) + " |\n")
 
+    table_severities = construct_table_severities(severities)
+
+    content = f"""# LastVuln report
+**Generated:** {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+**Total vulnerabilities:** {len(data)}
+## Severity Summary
+{table_severities}
+## Vulnerabilities
+{header_line}{separator_line}{''.join(rows)}
+"""
+
     with open(f"{filename}.md", "w", encoding="utf-8") as f:
-        f.write(header_line)
-        f.write(separator_line)
-        f.writelines(rows)
+        f.write(content)
+
+
+def construct_table_severities(severities: dict[str, int]) -> str:
+    table = "| Severity | Count |\n" "| --- | --- |\n"
+
+    for severity, count in severities.items():
+        table += f"| {severity.upper()} | {count} |\n"
+
+    return table
 
 
 def export_html(data: list[dict], filename: str):
@@ -66,17 +99,19 @@ def export_html(data: list[dict], filename: str):
         "medium": 0,
         "low": 0,
         "none": 0,
-    }    
+    }
 
     table_headers = []
     for header in headers:
-        table_headers.append(f"<th style='background-color: #182D5D; color: white'>{header}</th>")
+        table_headers.append(
+            f"<th style='background-color: #182D5D; color: white'>{header}</th>"
+        )
 
     table_rows = []
     for row in data:
         current_cells = []
-       
-        severity = row.get("severity", "none").lower() 
+
+        severity = row.get("severity", "none").lower()
         if severity in severities:
             severities[severity] += 1
         else:
@@ -84,17 +119,21 @@ def export_html(data: list[dict], filename: str):
 
         for header in headers:
             value = row[header]
-            
+
             if header == "severity":
-                current_cells.append(f"<td style='background-color:{color_severity(value.upper())}; font-weight:bold;'>{value}</td>") 
+                current_cells.append(
+                    f"<td style='background-color:{color_severity(value.upper())}; font-weight:bold;'>{value}</td>"
+                )
             elif header == "score":
-                current_cells.append(f"<td style='background-color:{color_score(value)}; font-weight:bold;'>{value}</td>")
+                current_cells.append(
+                    f"<td style='background-color:{color_score(value)}; font-weight:bold;'>{value}</td>"
+                )
             else:
                 current_cells.append(f"<td>{value}</td>")
-        
+
         row_cells = "\n            ".join(current_cells)
-        table_rows.append(f"<tr>\n            {row_cells}\n        </tr>")        
-    
+        table_rows.append(f"<tr>\n            {row_cells}\n        </tr>")
+
     cards_severities = construct_cards(severities)
 
     content_html = f"""<!DOCTYPE html>
@@ -140,7 +179,6 @@ def export_html(data: list[dict], filename: str):
         archivo.write(content_html)
 
 
-
 def color_severity(severity: str) -> str:
     if severity == "CRITICAL":
         return "#ff4d4f"
@@ -162,7 +200,7 @@ def color_score(score: float) -> str:
     elif score >= 7.0 and score <= 8.9:
         return "#ff9f43"
     elif score >= 9.0 and score <= 10.0:
-       return "#ff4d4f"
+        return "#ff4d4f"
     else:
         return "#b0b0b0"
 
@@ -186,7 +224,6 @@ def construct_cards(severities: dict[str, int]) -> str:
           <p style="color: black; margin: 0; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{severity}</p>
           <p style="color: black; margin: 0.4rem 0 0 0; font-size: 2.2rem; font-weight: bold; line-height: 1;">{count}</p>
         </div>
-        """
-        )
+        """)
 
     return "\n".join(cards)
