@@ -24,12 +24,18 @@ def export_json(data: list[dict], filename: str):
         archivo.write(data_json)
 
 
-def export_csv(data: list[dict], filename: str):
+def export_csv(data: list[dict], filename: str) -> None:
+    if not data:
+        return
+
     df = pd.DataFrame(data)
     df.to_csv(f"{filename}.csv", index=False)
 
 
 def export_excel(data: list[dict], filename: str):
+    if not data:
+        return
+
     df = pd.DataFrame(data)
 
     with pd.ExcelWriter(f"{filename}.xlsx", engine="openpyxl") as writer:
@@ -42,6 +48,9 @@ def export_excel(data: list[dict], filename: str):
 
 
 def export_markdown(data: list[dict], filename: str):
+    if not data:
+        return 
+
     headers = [k for k in data[0] if k != "summary"]
 
     header_line = "| " + " | ".join(headers) + " |\n"
@@ -92,6 +101,9 @@ def construct_table_severities(severities: dict[str, int]) -> str:
 
 
 def export_html(data: list[dict], filename: str):
+    if not data:
+        return
+
     headers = list(data[0].keys())
     severities = {
         "critical": 0,

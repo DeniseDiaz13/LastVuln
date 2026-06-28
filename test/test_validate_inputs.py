@@ -22,12 +22,12 @@ def test_invalid_ecosystem():
 
 def test_year_without_month():
     with pytest.raises(ValueError):
-        validate_inputs("pip", 2024, None, None, "sarif")
+        validate_inputs("pip", 2024, None, None, "md")
 
 
 def test_month_without_year():
     with pytest.raises(ValueError):
-        validate_inputs("pip", None, 5, None, "sarif")
+        validate_inputs("pip", None, 5, None, "html")
 
 
 def test_invalid_severity():
@@ -45,7 +45,7 @@ def test_valid_inputs():
 
 
 def test_valid_inputs_without_date():
-    validate_inputs("pip", None, None, None, "sarif")
+    validate_inputs("pip", None, None, None, "html")
 
 
 def test_leap_year():
