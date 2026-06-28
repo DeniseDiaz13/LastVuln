@@ -41,7 +41,12 @@ def search(
             if filename is None:
                 filename = f"vulns_export_{datetime.now():%Y-%m-%d_%H-%M-%S}"
 
-            export_vulns(export, data["data"], filename)
+            try:
+                export_vulns(export, data["data"], filename)
+            except Exception as e:
+                console.print(f"[red]Export failed:[/red] {e}")
+                raise typer.Exit(1)
+            
             console.print(f"\n[green] ✓ Export completed[/green] [cyan]({filename}.{export})[/cyan]")
         else:
             console.print(f"\n Showing {len(data['data'])} results for ecosystem [cyan]{clean_ecosystem}[/cyan]\n")
@@ -49,10 +54,6 @@ def search(
 
     except ValueError as e:
         console.print(f"\n [red]Error:[/red] {e}")
-        raise typer.Exit(code=1)
-
-    except Exception as e:
-        console.print(f"\n [red]Export failed:[/red] {e}")
         raise typer.Exit(code=1)
 
 

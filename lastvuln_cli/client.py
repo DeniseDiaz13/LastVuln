@@ -16,7 +16,7 @@ def build_month_range(year: int, month: int) -> str:
     return f"{year}-{month:02d}-01..{year}-{month:02d}-{last_day:02d}"
 
 
-def consult(ecosystem: str, n: int, year: int | None, month: int | None, severity: str | None) -> dict[str, Any]:
+def consult_per_ecosystem(ecosystem: str, n: int, year: int | None, month: int | None, severity: str | None) -> dict[str, Any]:
     if not GITHUB_TOKEN:
         return {"status": 500, "message": "GitHub token not configured", "data": []}
 
@@ -65,6 +65,40 @@ def consult(ecosystem: str, n: int, year: int | None, month: int | None, severit
     return {"status": 200, "message": "", "data": data}
 
 
+def consult_per_package(ids) -> dict[str, Any]:
+    if not GITHUB_TOKEN:
+        return {"status": 500, "message": "GitHub token not configured", "data": []}
+    
+    data = [] 
+    for i in ids:
+        headers = {
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {GITHUB_TOKEN}",
+            "X-GitHub-Api-Version": "2026-03-10",
+        }
+
+        params = {
+            "ghsa_id": i,
+            "sort": "published",
+            "direction": "desc",
+        }
+
+        response = requests.get(
+            "https://api.github.com/advisories", headers=headers, params=params
+        )
+
+        data.extend(response.json())
+
+        if response.status_code != 200:
+            return {
+                "status": response.status_code,
+                "message": i.get("message", "Unknown error"),
+                "data": [],
+            }
+
+    return {"status": 200, "message": "", "data": data}
+
+
 def format_data(result: dict[str, Any]) -> dict[str, Any]:
     if result["status"] != 200:
         return result
@@ -83,7 +117,7 @@ def format_data(result: dict[str, Any]) -> dict[str, Any]:
             cwe_ids = ", ".join(
                 cwe.get("cwe_id", "") for cwe in cwes if cwe.get("cwe_id")
             )
-
+             
             rows.append(
                 {
                     "package": package.get("name"),
@@ -103,12 +137,35 @@ def format_data(result: dict[str, Any]) -> dict[str, Any]:
                     "summary": advisory.get("summary"),
                 }
             )
-
+    
     return {
         "status": 200,
         "message": "",
         "data": rows,
     }
+
+
+def search_for_package(version: str, name_pkg: str, ecosystem: str):
+    payload = {
+        "version": version,
+        "package": {
+            "name": name_pkg,
+            "ecosystem": ecosystem,
+        }
+    }
+
+    response = requests.post("https://api.osv.dev/v1/query", json=payload)
+    res = response.json()
+
+    ids = [item.get("id") for item in res.get("vulns", [])] 
+    data = consult_per_package(ids)
+    data_clean = format_data(data)
+    
+    if data_clean["status"] != 200:
+        return data_clean
+     
+    return data_clean
+
 
 
 def search_for_ecosystem(ecosystem: str, n: int = 5, year: int | None = None, month: int | None = None, severity: str | None = None) -> dict[str, Any]:
@@ -119,7 +176,7 @@ def search_for_ecosystem(ecosystem: str, n: int = 5, year: int | None = None, mo
             "data": [],
         }
 
-    data = consult(ecosystem, n, year, month, severity)
+    data = consult_per_ecosystem(ecosystem, n, year, month, severity)
     data_clean = format_data(data)
 
     if data_clean["status"] != 200:
