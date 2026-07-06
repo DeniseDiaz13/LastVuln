@@ -1,6 +1,7 @@
 from datetime import datetime
 import re
 
+
 def validate_inputs(
     ecosystem: str,
     year: int | None,
@@ -62,8 +63,11 @@ def validate_input_ecosystem(ecosystem: str):
 
 
 def validate_input_year(year: int):
-    if year > datetime.now().year or year < 2016:
+    if year > datetime.now().year:
         raise ValueError(f"[red]Year cannot be future[/red]")
+
+    if year < 2016:
+        raise ValueError("[red]Year cannot be earlier than 2016.[/red]")
 
 
 def validate_input_month(month: int):
