@@ -1,7 +1,7 @@
 import typer
 from rich.console import Console
 from .cache import init_db
-from .client import search_for_ecosystem
+from .client import search_for_ecosystem, search_for_package
 from .formatter import format_vulnerabilities
 from .validate_inputs import *
 from .export import *
@@ -13,6 +13,8 @@ app = typer.Typer()
 @app.command()
 def search(
     ecosystem: str = typer.Option(..., "--ecosystem", "-e"),
+    package: str = typer.Option(None, "--package", "-p"),
+    version: str = typer.Option(None, "--version", "-v"),
     n_rows: int = typer.Option(10, "--n_rows", "-n"),
     year: int | None = typer.Option(None, "--year-published", "-y"),
     month: int | None = typer.Option(None, "--month-published", "-m"),
@@ -22,8 +24,13 @@ def search(
 ):
     try:
         clean_ecosystem = ecosystem.strip().lower()
-        validate_inputs(clean_ecosystem, year, month, severity, export)
-        data = search_for_ecosystem(clean_ecosystem, n_rows, year, month, severity)
+        validate_inputs(clean_ecosystem, year, month, severity, package, version, export)
+        data = []
+
+        if package:
+            data = search_for_package(version, package, ecosystem, n_rows)
+        else:
+            data = search_for_ecosystem(clean_ecosystem, n_rows, year, month, severity)
 
         if data["status"] != 200:
             console.print(f"\n[red]{data['message']}[/red]")

@@ -145,12 +145,39 @@ def format_data(result: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def search_for_package(version: str, name_pkg: str, ecosystem: str):
+def ecosystem_mapping(ecosystem: str):
+    map = {
+        "rubygems": "RubyGems", 
+        "npm": "npm", 
+        "pip": "PyPI", 
+        "maven": "Maven", 
+        "nuget": "NuGet", 
+        "composer": "Packagist", 
+        "go": "Go",
+        "rust": "crates.io", 
+        "erlang": "Hex", 
+        "pub": "Pub", 
+        "swift": "SwiftURL" 
+    }
+
+    return map.get(ecosystem)
+
+
+def search_for_package(version: str, name_pkg: str, ecosystem: str, n: int = 5):
+    if n > 50:
+        return {
+            "status": 400,
+            "message": "Maximum 50 records can be displayed on console",
+            "data": [],
+        }
+    
+    ecosystem_n = ecosystem_mapping(ecosystem)
+    
     payload = {
         "version": version,
         "package": {
             "name": name_pkg,
-            "ecosystem": ecosystem,
+            "ecosystem": ecosystem_n,
         }
     }
 
@@ -164,8 +191,8 @@ def search_for_package(version: str, name_pkg: str, ecosystem: str):
     if data_clean["status"] != 200:
         return data_clean
      
+    data_clean["data"] = data_clean["data"][:n]  # rows showed
     return data_clean
-
 
 
 def search_for_ecosystem(ecosystem: str, n: int = 5, year: int | None = None, month: int | None = None, severity: str | None = None) -> dict[str, Any]:
