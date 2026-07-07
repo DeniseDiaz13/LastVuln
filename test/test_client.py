@@ -3,44 +3,15 @@ from lastvuln_cli.client import search_for_ecosystem, search_for_package
 
 
 @patch("lastvuln_cli.client.requests.get")
-def test_search_for_ecosystem_success(mock_get):
+def test_search_for_ecosystem_success(mock_get, git_advisory_data):
     mock_response = Mock()
     mock_response.status_code = 200
 
-    mock_response.json.return_value = [
-        {
-            "ghsa_id": "GHSA-q3w6-q3hc-c5x6",
-            "cve_id": "CVE-2026-47717",
-            "severity": "high",
-            "summary": "FUXA's Unauthenticated Project Data Disclosure Exposes Server-Side Scripts and Device Configurations",
-            "published_at": "2023-04-27T22:51:18Z",
-            "epss": {"percentage": 0.25},
-            "cvss_severities": {
-                "cvss_v3": {"score": 7.5},
-                "cvss_v4": {"score": 0.0},
-            },
-            "cwes": [
-                {
-                    "cwe_id": "CWE-201",
-                    "name": "Insertion of Sensitive Information Into Sent Data",
-                }
-            ],
-            "vulnerabilities": [
-                {
-                    "package": {
-                        "ecosystem": "npm",
-                        "name": "fuxa-server",
-                    },
-                    "vulnerable_version_range": "=1.3.0",
-                    "first_patched_version": "1.3.1",
-                }
-            ],
-        }
-    ]
+    mock_response.json.return_value = [git_advisory_data]
 
     mock_get.return_value = mock_response
 
-    result = search_for_ecosystem("npm", 1, 2023, 4)
+    result = search_for_ecosystem("npm", 1, 2026, 6)
 
     assert result["status"] == 200
     assert result["message"] == ""
@@ -52,10 +23,10 @@ def test_search_for_ecosystem_success(mock_get):
     assert row["cve_id"] == "CVE-2026-47717"
     assert row["package"] == "fuxa-server"
     assert row["severity"] == "high"
-    assert row["score"] == 7.5
+    assert row["score"] == 8.9
     assert row["epss"] == 25.0
     assert row["fixed_version"] == "1.3.1"
-    assert row["cwe_id"] == "CWE-201"
+    assert row["cwe_id"] == "CWE-201, CWE-202"
 
 
 @patch("lastvuln_cli.client.requests.get")
@@ -74,44 +45,15 @@ def test_search_for_ecosystem_http_error(mock_get):
 
 
 @patch("lastvuln_cli.client.requests.get")
-def test_search_for_ecosystem_cvss_version_priority(mock_get):
+def test_search_for_ecosystem_cvss_version_priority(mock_get, git_advisory_data):
     mock_response = Mock()
     mock_response.status_code = 200
 
-    mock_response.json.return_value = [
-        {
-            "ghsa_id": "GHSA-q3w6-q3hc-c5x6",
-            "cve_id": "CVE-2026-47717",
-            "severity": "high",
-            "summary": "FUXA's Unauthenticated Project Data Disclosure Exposes Server-Side Scripts and Device Configurations",
-            "published_at": "2024-05-27T22:51:18Z",
-            "epss": {"percentage": 0.25},
-            "cvss_severities": {
-                "cvss_v3": {"score": 7.5},
-                "cvss_v4": {"score": 8.9},
-            },
-            "cwes": [
-                {
-                    "cwe_id": "CWE-201",
-                    "name": "Insertion of Sensitive Information Into Sent Data",
-                }
-            ],
-            "vulnerabilities": [
-                {
-                    "package": {
-                        "ecosystem": "npm",
-                        "name": "fuxa-server",
-                    },
-                    "vulnerable_version_range": "=1.3.0",
-                    "first_patched_version": "1.3.1",
-                }
-            ],
-        }
-    ]
+    mock_response.json.return_value = [git_advisory_data]
 
     mock_get.return_value = mock_response
 
-    result = search_for_ecosystem("npm", 1, 2024, 5)
+    result = search_for_ecosystem("npm", 1, 2026, 6)
 
     assert result["status"] == 200
     assert result["message"] == ""
@@ -126,52 +68,19 @@ def test_search_for_ecosystem_cvss_version_priority(mock_get):
     assert row["score"] == 8.9  # cvss_v4 takes priority when available.
     assert row["epss"] == 25.0
     assert row["fixed_version"] == "1.3.1"
-    assert row["cwe_id"] == "CWE-201"
+    assert row["cwe_id"] == "CWE-201, CWE-202"
 
 
 @patch("lastvuln_cli.client.requests.get")
-def test_search_for_ecosystem_various_cwe(mock_get):
+def test_search_for_ecosystem_various_cwe(mock_get, git_advisory_data):
     mock_response = Mock()
     mock_response.status_code = 200
 
-    mock_response.json.return_value = [
-        {
-            "ghsa_id": "GHSA-q3w6-q3hc-c5x6",
-            "cve_id": "CVE-2026-47717",
-            "severity": "high",
-            "summary": "FUXA's Unauthenticated Project Data Disclosure Exposes Server-Side Scripts and Device Configurations",
-            "published_at": "2025-06-17T22:51:18Z",
-            "epss": {"percentage": 0.25},
-            "cvss_severities": {
-                "cvss_v3": {"score": 7.5},
-                "cvss_v4": {"score": 8.9},
-            },
-            "cwes": [
-                {
-                    "cwe_id": "CWE-201",
-                    "name": "Insertion of Sensitive Information Into Sent Data",
-                },
-                {
-                    "cwe_id": "CWE-202",
-                    "name": "Insertion of Sensitive Information Into Sent Data",
-                },
-            ],
-            "vulnerabilities": [
-                {
-                    "package": {
-                        "ecosystem": "npm",
-                        "name": "fuxa-server",
-                    },
-                    "vulnerable_version_range": "=1.3.0",
-                    "first_patched_version": "1.3.1",
-                }
-            ],
-        }
-    ]
+    mock_response.json.return_value = [git_advisory_data]
 
     mock_get.return_value = mock_response
 
-    result = search_for_ecosystem("npm", 1, 2025, 6)
+    result = search_for_ecosystem("npm", 1, 2026, 6)
 
     assert result["status"] == 200
     assert result["message"] == ""
@@ -183,52 +92,15 @@ def test_search_for_ecosystem_various_cwe(mock_get):
 
 
 @patch("lastvuln_cli.client.requests.get")
-def test_search_for_ecosystem_various_vulnerabilities(mock_get):
+def test_search_for_ecosystem_various_vulnerabilities(mock_get, git_advisory_data):
     mock_response = Mock()
     mock_response.status_code = 200
 
-    mock_response.json.return_value = [
-        {
-            "ghsa_id": "GHSA-q3w6-q3hc-c5x6",
-            "cve_id": "CVE-2026-47717",
-            "severity": "high",
-            "summary": "FUXA's Unauthenticated Project Data Disclosure Exposes Server-Side Scripts and Device Configurations",
-            "published_at": "2025-07-07T22:51:18Z",
-            "epss": {"percentage": 0.2473},
-            "cvss_severities": {
-                "cvss_v3": {"score": 7.5},
-                "cvss_v4": {"score": 8.9},
-            },
-            "cwes": [
-                {
-                    "cwe_id": "CWE-201",
-                    "name": "Insertion of Sensitive Information Into Sent Data",
-                }
-            ],
-            "vulnerabilities": [
-                {
-                    "package": {
-                        "ecosystem": "npm",
-                        "name": "fuxa-server",
-                    },
-                    "vulnerable_version_range": "=1.3.0",
-                    "first_patched_version": "1.3.1",
-                },
-                {
-                    "package": {
-                        "ecosystem": "npm",
-                        "name": "bugsink",
-                    },
-                    "vulnerable_version_range": "< 2.0.0",
-                    "first_patched_version": "2.1.0",
-                },
-            ],
-        }
-    ]
+    mock_response.json.return_value = [git_advisory_data]
 
     mock_get.return_value = mock_response
 
-    result = search_for_ecosystem("npm", 2, 2025, 7)
+    result = search_for_ecosystem("npm", 2, 2026, 6)
 
     assert result["status"] == 200
     assert result["message"] == ""
@@ -274,40 +146,11 @@ def test_search_for_ecosystem_no_vulnerabilities(mock_get):
 
 
 @patch("lastvuln_cli.client.requests.get")
-def test_search_for_ecosystem_without_parameters(mock_get):
+def test_search_for_ecosystem_without_parameters(mock_get, git_advisory_data):
     mock_response = Mock()
     mock_response.status_code = 200
 
-    mock_response.json.return_value = [
-        {
-            "ghsa_id": "GHSA-q3w6-q3hc-c5x6",
-            "cve_id": "CVE-2026-47717",
-            "severity": "high",
-            "summary": "FUXA's Unauthenticated Project Data Disclosure Exposes Server-Side Scripts and Device Configurations",
-            "published_at": "2025-06-13T22:51:18Z",
-            "epss": {"percentage": 0.2473},
-            "cvss_severities": {
-                "cvss_v3": {"score": 7.5},
-                "cvss_v4": {"score": 8.9},
-            },
-            "cwes": [
-                {
-                    "cwe_id": "CWE-201",
-                    "name": "Insertion of Sensitive Information Into Sent Data",
-                }
-            ],
-            "vulnerabilities": [
-                {
-                    "package": {
-                        "ecosystem": "npm",
-                        "name": "fuxa-server",
-                    },
-                    "vulnerable_version_range": "=1.3.0",
-                    "first_patched_version": "1.3.1",
-                }
-            ],
-        }
-    ]
+    mock_response.json.return_value = [git_advisory_data]
 
     mock_get.return_value = mock_response
 
@@ -315,7 +158,7 @@ def test_search_for_ecosystem_without_parameters(mock_get):
 
     assert result["status"] == 200
     assert result["message"] == ""
-    assert len(result["data"]) == 1
+    assert len(result["data"]) == 2
 
 
 @patch("lastvuln_cli.client.requests.get")
