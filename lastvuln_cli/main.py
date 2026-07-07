@@ -43,7 +43,7 @@ def search(
         output = format_vulnerabilities(data["data"])
 
         if export:
-            console.print(f"\n Found {len(data['data'])} results for ecosystem [cyan]{clean_ecosystem}[/cyan]\n")
+            console.print(f"\n Found {len(data['data'])} results for {'package' if package else 'ecosystem'} [cyan]{package if package else clean_ecosystem}[/cyan]\n")
             
             if filename is None:
                 filename = f"vulns_export_{datetime.now():%Y-%m-%d_%H-%M-%S}"
@@ -56,7 +56,7 @@ def search(
             
             console.print(f"\n[green] ✓ Export completed[/green] [cyan]({filename}.{export})[/cyan]")
         else:
-            console.print(f"\n Showing {len(data['data'])} results for ecosystem [cyan]{clean_ecosystem}[/cyan]\n")
+            console.print(f"\n Showing {len(data['data'])} results for {'package' if package else 'ecosystem'} [cyan]{package if package else clean_ecosystem}[/cyan]\n")
             console.print(output)
 
     except ValueError as e:

@@ -156,7 +156,7 @@ def ecosystem_mapping(ecosystem: str):
 
 
 def search_for_package(
-    version: str, name_pkg: str, ecosystem: str, n: int = 5
+    version: str, package: str, ecosystem: str, n: int = 5
 ) -> dict[str, Any]:
     if n > 50:
         return {
@@ -170,12 +170,12 @@ def search_for_package(
     payload = {
         "version": version,
         "package": {
-            "name": name_pkg,
+            "name": package,
             "ecosystem": ecosystem_n,
         },
     }
 
-    cache_key = f"{ecosystem}:{name_pkg}:{version}:{n}"
+    cache_key = f"{ecosystem}:{package}:{version}:{n}"
     cached = get_cache(cache_key)
 
     if cached and not cache_is_expired(cached):

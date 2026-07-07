@@ -13,11 +13,14 @@ def validate_inputs(
 ):
     validate_input_ecosystem(ecosystem)
 
+    if year is not None or month is not None or severity is not None:
+        if package is not None:
+            raise ValueError(f"[red]Package parameter is not supported with parameters year, month and severity[/red]")
+        if version is not None:
+            raise ValueError(f"[red]Version parameter is not supported with parameters year, month and severity[/red]")
+    
     if (year is None) != (month is None):
         raise ValueError(f"[red]Year and month must be provided together[/red]")
-
-    if (package is None) != (version is None):
-        raise ValueError(f"[red]Package and version must be provided together[/red]")
 
     if year is not None:
         validate_input_year(year)
@@ -27,7 +30,10 @@ def validate_inputs(
 
     if severity is not None:
         validate_input_severity(severity)
-
+    
+    if (package is None) != (version is None):
+        raise ValueError(f"[red]Package and version must be provided together[/red]")
+     
     if package is not None:
         validate_input_package(package)
 
