@@ -65,11 +65,19 @@ def consult_per_ecosystem(ecosystem: str, n: int, year: int | None, month: int |
     return {"status": 200, "message": "", "data": data}
 
 
-def consult_per_package(ids) -> dict[str, Any]:
+def consult_per_package(ids: list[str], ecosystem: str, package: str, version: str, n: int) -> dict[str, Any]:
     if not GITHUB_TOKEN:
         return {"status": 500, "message": "GitHub token not configured", "data": []}
     
-    data = [] 
+    cache_key = f"{ecosystem}:{package}:{version}:{n}"
+    
+    cached = get_cache(cache_key)
+    expired = cache_is_expired(cached)
+
+    if cached and not expired:
+        return {"status": 200, "message": "", "data": cached["data"]}
+
+    data: list[dict[str, Any]] = [] 
     for i in ids:
         headers = {
             "Accept": "application/vnd.github+json",
@@ -86,16 +94,18 @@ def consult_per_package(ids) -> dict[str, Any]:
         response = requests.get(
             "https://api.github.com/advisories", headers=headers, params=params
         )
-
-        data.extend(response.json())
-
+        
         if response.status_code != 200:
             return {
                 "status": response.status_code,
-                "message": i.get("message", "Unknown error"),
+                "message": response.json().get("message", "Unknown error"),
                 "data": [],
             }
-
+        
+        data.extend(response.json())
+        
+    save_cache(cache_key, data)
+    
     return {"status": 200, "message": "", "data": data}
 
 
@@ -163,7 +173,7 @@ def ecosystem_mapping(ecosystem: str):
     return map.get(ecosystem)
 
 
-def search_for_package(version: str, name_pkg: str, ecosystem: str, n: int = 5):
+def search_for_package(version: str, name_pkg: str, ecosystem: str, n: int = 5) -> dict[str, Any]:
     if n > 50:
         return {
             "status": 400,
@@ -185,7 +195,7 @@ def search_for_package(version: str, name_pkg: str, ecosystem: str, n: int = 5):
     res = response.json()
 
     ids = [item.get("id") for item in res.get("vulns", [])] 
-    data = consult_per_package(ids)
+    data = consult_per_package(ids, ecosystem, name_pkg, version, n)
     data_clean = format_data(data)
     
     if data_clean["status"] != 200:

@@ -22,7 +22,7 @@ def init_db() -> None:
     conn.close()
 
 
-def save_cache(key: str, data: dict[str, Any]) -> None:
+def save_cache(key: str, data: dict[str, Any] | list[dict[str, Any]]) -> None:
     conn = sqlite3.connect(DB_NAME)
 
     conn.execute(
