@@ -155,9 +155,7 @@ def ecosystem_mapping(ecosystem: str):
     return map.get(ecosystem)
 
 
-def search_for_package(
-    version: str, package: str, ecosystem: str, n: int = 5
-) -> dict[str, Any]:
+def search_for_package(version: str, package: str, ecosystem: str, n: int = 5) -> dict[str, Any]:
     if n > 50:
         return {
             "status": 400,
@@ -191,7 +189,16 @@ def search_for_package(
             "data": [],
         }
 
-    ids = [item.get("id") for item in res.get("vulns", [])]
+    ids = []
+    seen = set()
+    for vuln in res.get("vulns", []):
+        candidates = [vuln.get("id"), *vuln.get("aliases", [])] # OSV advisories may use non-GHSA IDs (PYSEC, GO, RUSTSEC, etc.), so also inspect aliases.
+
+        for candidate in candidates:
+            if (candidate and candidate.startswith("GHSA-") and candidate not in seen):
+                seen.add(candidate)
+                ids.append(candidate)
+
     data = consult_per_package(ids)
     data_clean = format_data(data)
 
