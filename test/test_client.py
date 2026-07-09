@@ -177,6 +177,22 @@ def test_search_for_ecosystem_error_without_message(mock_get):
     assert result["data"] == []
 
 
+@patch("lastvuln_cli.client.requests.get")
+def test_search_for_ecosystem_json_malformed(mock_get):
+    mock_response = Mock()
+    mock_response.status_code = 400
+
+    mock_response.json.side_effect = ValueError("JSON invalid")
+
+    mock_get.return_value = mock_response
+
+    result = search_for_ecosystem("npm", 1, 2025, 7)
+
+    assert result["status"] == 500
+    assert result["message"] == "Invalid JSON response"
+    assert result["data"] == []
+
+
 @patch("lastvuln_cli.client.requests.post")
 @patch("lastvuln_cli.client.requests.get")
 def test_search_for_package_success(mock_get, mock_post):
@@ -284,14 +300,16 @@ def test_search_for_package_git_error(mock_get, mock_post):
 
     # GitHub Advisories response
     mock_get_response = Mock()
-    mock_get_response.status_code = 403
-    mock_get_response.json.return_value = {"message": "API rate limit exceeded"}
+    mock_get_response.status_code = 500
+    mock_get_response.json.return_value = {
+        "message": "No advisories could be retrieved"
+    }
 
     mock_get.return_value = mock_get_response
     result = search_for_package("3.1.4", "jinja2", "pip", 5)
 
-    assert result["status"] == 403
-    assert "rate limit exceeded" in result["message"].lower()
+    assert result["status"] == 500
+    assert "advisories could be retrieved" in result["message"].lower()
 
     mock_post.assert_called_once()
     assert mock_get.call_count == 1

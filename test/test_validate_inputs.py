@@ -82,7 +82,7 @@ def test_search_for_ecosystem_more_than_50():
     result = search_for_ecosystem("pip", 51, None, None)
 
     assert result["status"] == 400
-    assert result["message"] == "Maximum 50 records can be displayed on console"
+    assert result["message"] == "Records limit must be between 1 and 50"
     assert result["data"] == []
 
 
@@ -90,5 +90,5 @@ def test_search_for_package_more_than_50():
     result = search_for_package("3.1.4", "jinja2", "pip", 55)
 
     assert result["status"] == 400
-    assert result["message"] == "Maximum 50 records can be displayed on console"
+    assert result["message"] == "Records limit must be between 1 and 50"
     assert result["data"] == []
