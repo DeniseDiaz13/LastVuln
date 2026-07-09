@@ -5,6 +5,7 @@ import os
 from calendar import monthrange
 from typing import Any
 from .cache import get_cache, save_cache, cache_is_expired
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 load_dotenv()
 
@@ -14,6 +15,41 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 def build_month_range(year: int, month: int) -> str:
     last_day = monthrange(year, month)[1]
     return f"{year}-{month:02d}-01..{year}-{month:02d}-{last_day:02d}"
+
+
+def parse_json(response) -> dict[str, Any]:
+    try:
+        data = response.json()
+    except ValueError:
+        return {
+            "status": 500,
+            "message": "Invalid JSON response",
+            "data": [],
+        }
+
+    if response.status_code != 200:
+        return {
+            "status": response.status_code,
+            "message": (
+                data.get("message", "Unknown error")
+                if isinstance(data, dict)
+                else "Unknown error"
+            ),
+            "data": [],
+        }
+
+    if isinstance(data, list):
+        return {
+            "status": 200,
+            "message": "",
+            "data": data,
+        }
+
+    return {
+        "status": 500,
+        "message": "Unexpected response format",
+        "data": [],
+    }
 
 
 def consult_per_ecosystem(
@@ -42,53 +78,105 @@ def consult_per_ecosystem(
     }
 
     response = requests.get(
-        "https://api.github.com/advisories", headers=headers, params=params
+        "https://api.github.com/advisories",
+        headers=headers,
+        params=params,
+        timeout=10,
     )
 
-    data = response.json()
-
-    if response.status_code != 200:
+    try:
+        response = requests.get(
+            "https://api.github.com/advisories",
+            headers=headers,
+            params=params,
+            timeout=10,
+        )
+    except requests.RequestException as e:
         return {
-            "status": response.status_code,
-            "message": data.get("message", "Unknown error"),
+            "status": 500,
+            "message": str(e),
             "data": [],
         }
 
-    return {"status": 200, "message": "", "data": data}
+    return parse_json(response)
+
+
+def fetch_advisory(ghsa_id: str, headers: dict[str, str]) -> dict[str, Any]:
+    params = {
+        "ghsa_id": ghsa_id,
+        "sort": "published",
+        "direction": "desc",
+    }
+
+    try:
+        response = requests.get(
+            "https://api.github.com/advisories",
+            headers=headers,
+            params=params,
+            timeout=10,
+        )
+    except requests.RequestException as e:
+        return {
+            "status": 500,
+            "message": str(e),
+            "data": [],
+        }
+
+    if response.status_code != 200:
+        try:
+            message = response.json().get("message", "Unknown error")
+        except ValueError:
+            message = "Invalid JSON response"
+
+        return {
+            "status": response.status_code,
+            "message": message,
+            "data": [],
+        }
+
+    return {
+        "status": 200,
+        "message": "",
+        "data": response.json(),
+    }
 
 
 def consult_per_package(ids: list[str]) -> dict[str, Any]:
     if not GITHUB_TOKEN:
-        return {"status": 500, "message": "GitHub token not configured", "data": []}
-
-    data: list[dict[str, Any]] = []
-    for i in ids:
-        headers = {
-            "Accept": "application/vnd.github+json",
-            "Authorization": f"Bearer {GITHUB_TOKEN}",
-            "X-GitHub-Api-Version": "2026-03-10",
+        return {
+            "status": 500,
+            "message": "GitHub token not configured",
+            "data": [],
         }
 
-        params = {
-            "ghsa_id": i,
-            "sort": "published",
-            "direction": "desc",
-        }
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "X-GitHub-Api-Version": "2026-03-10",
+    }
 
-        response = requests.get(
-            "https://api.github.com/advisories", headers=headers, params=params
-        )
+    data = []
+    errors = []
+    with ThreadPoolExecutor(max_workers = 5) as executor:
+        futures = [
+            executor.submit(fetch_advisory, ghsa_id, headers)
+            for ghsa_id in ids
+        ]
 
-        if response.status_code != 200:
-            return {
-                "status": response.status_code,
-                "message": response.json().get("message", "Unknown error"),
-                "data": [],
-            }
+        for future in as_completed(futures):
+            result = future.result()
 
-        data.extend(response.json())
+            if result["status"] == 200:
+                data.extend(result["data"])
+            else:
+                errors.append(result)
 
-    return {"status": 200, "message": "", "data": data}
+    return {
+        "status": 200 if data else 500,
+        "message": "" if data else "No advisories could be retrieved",
+        "data": data,
+        "errors": errors,
+    }
 
 
 def format_data(result: dict[str, Any]) -> dict[str, Any]:
@@ -110,14 +198,17 @@ def format_data(result: dict[str, Any]) -> dict[str, Any]:
                 cwe.get("cwe_id", "") for cwe in cwes if cwe.get("cwe_id")
             )
 
+            try:
+                cvss4_score = float(cvss4.get("score", 0))
+            except (TypeError, ValueError):
+                cvss4_score = 0
+
             rows.append(
                 {
                     "package": package.get("name"),
                     "severity": advisory.get("severity"),
                     "score": (
-                        cvss4.get("score")
-                        if cvss4.get("score", 0) > 0
-                        else cvss3.get("score")
+                        cvss4.get("score") if cvss4_score > 0 else cvss3.get("score")
                     ),
                     "epss": round(epss.get("percentage", 0) * 100, 2),
                     "affected_versions": vuln.get("vulnerable_version_range"),
@@ -155,15 +246,14 @@ def ecosystem_mapping(ecosystem: str):
     return map.get(ecosystem)
 
 
-def search_for_package(version: str, package: str, ecosystem: str, n: int = 5) -> dict[str, Any]:
-    if n > 50:
+def fetch_ghsa_ids(version: str, package: str, ecosystem: str) -> dict[str, Any]:
+    ecosystem_n = ecosystem_mapping(ecosystem)
+    if not ecosystem_n:
         return {
             "status": 400,
-            "message": "Maximum 50 records can be displayed on console",
+            "message": "Invalid ecosystem",
             "data": [],
         }
-
-    ecosystem_n = ecosystem_mapping(ecosystem)
 
     payload = {
         "version": version,
@@ -173,55 +263,107 @@ def search_for_package(version: str, package: str, ecosystem: str, n: int = 5) -
         },
     }
 
-    cache_key = f"{ecosystem}:{package}:{version}:{n}"
-    cached = get_cache(cache_key)
+    try:
+        response = requests.post(
+            "https://api.osv.dev/v1/query",
+            json=payload,
+            timeout=10,
+        )
+    except requests.RequestException as e:
+        return {
+            "status": 500,
+            "message": str(e),
+            "data": [],
+        }
 
-    if cached and not cache_is_expired(cached):
-        return {"status": 200, "message": "", "data": cached["data"]}
-
-    response = requests.post("https://api.osv.dev/v1/query", json=payload)
-    res = response.json()
+    res: dict[str, Any] = {}
+    try:
+        res = response.json()
+    except ValueError:
+        return {
+            "status": 500,
+            "message": "Invalid JSON response",
+            "data": [],
+        }
 
     if response.status_code != 200:
         return {
             "status": response.status_code,
-            "message": response.json().get("message", "Unknown error"),
+            "message": res.get("message", "Unknown error"),
             "data": [],
         }
 
     ids = []
     seen = set()
     for vuln in res.get("vulns", []):
-        candidates = [vuln.get("id"), *vuln.get("aliases", [])] # OSV advisories may use non-GHSA IDs (PYSEC, GO, RUSTSEC, etc.), so also inspect aliases.
+        candidates = [
+            vuln.get("id"),
+            *vuln.get("aliases", []),
+        ]  # OSV advisories may use non-GHSA IDs (PYSEC, GO, RUSTSEC, etc.), so also inspect aliases.
 
         for candidate in candidates:
-            if (candidate and candidate.startswith("GHSA-") and candidate not in seen):
+            if candidate and candidate.startswith("GHSA-") and candidate not in seen:
                 seen.add(candidate)
                 ids.append(candidate)
 
-    data = consult_per_package(ids)
-    data_clean = format_data(data)
+    return {
+        "status": 200,
+        "message": "",
+        "data": ids,
+    }
 
-    save_cache(cache_key, data_clean["data"])
+
+def search_for_package(
+    version: str, package: str, ecosystem: str, n: int = 10
+) -> dict[str, Any]:
+    if n < 1 or n > 50:
+        return {
+            "status": 400,
+            "message": "Records limit must be between 1 and 50",
+            "data": [],
+        }
+
+    cache_key = f"{ecosystem}:{package}:{version}:{n}"
+    cached = get_cache(cache_key)
+
+    if cached and not cache_is_expired(cached):
+        return {"status": 200, "message": "", "data": cached["data"]}
+
+    res = fetch_ghsa_ids(version, package, ecosystem)
+
+    if res["status"] != 200:
+        return res
+
+    if not res["data"]:
+        return {
+            "status": 200,
+            "message": "",
+            "data": [],
+        }
+
+    data = consult_per_package(res["data"])
+    data_clean = format_data(data)
 
     if data_clean["status"] != 200:
         return data_clean
 
     data_clean["data"] = data_clean["data"][:n]  # rows showed
+    save_cache(cache_key, data_clean["data"])
+
     return data_clean
 
 
 def search_for_ecosystem(
     ecosystem: str,
-    n: int = 5,
+    n: int = 10,
     year: int | None = None,
     month: int | None = None,
     severity: str | None = None,
 ) -> dict[str, Any]:
-    if n > 50:
+    if n < 1 or n > 50:
         return {
             "status": 400,
-            "message": "Maximum 50 records can be displayed on console",
+            "message": "Records limit must be between 1 and 50",
             "data": [],
         }
 
@@ -234,10 +376,10 @@ def search_for_ecosystem(
     data = consult_per_ecosystem(ecosystem, n, year, month, severity)
     data_clean = format_data(data)
 
-    save_cache(cache_key, data_clean["data"])
-
     if data_clean["status"] != 200:
         return data_clean
 
     data_clean["data"] = data_clean["data"][:n]  # rows showed
+    save_cache(cache_key, data_clean["data"])
+
     return data_clean
