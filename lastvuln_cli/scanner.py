@@ -19,9 +19,17 @@ def get_packages_pip(path):
         content = archive.read()
 
     packages = {}
+
     for line in content.split("\n"):
+        line = line.strip()
+
+        if not line or line.startswith("#"):
+            continue
+
+        line = line.split("#", 1)[0].strip()
+
         if "==" in line:
-            name, version = line.split("==")
+            name, version = line.split("==", 1)
             packages[name] = version
 
     return packages
