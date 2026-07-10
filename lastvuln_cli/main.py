@@ -8,10 +8,16 @@ from .validate_inputs import *
 from .export import *
 
 console = Console()
-app = typer.Typer()
+app = typer.Typer(
+    help="CLI tool for searching and scanning package dependency vulnerabilities.",
+    add_completion=False,
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
 
 
-@app.command()
+@app.command(
+    help="Search vulnerabilities by package or ecosystem using OSV API and GitHub Advisory Database."
+)
 def search(
     ecosystem: str = typer.Option(..., "--ecosystem", "-e"),
     package: str = typer.Option(None, "--package", "-p"),
@@ -21,11 +27,13 @@ def search(
     month: int | None = typer.Option(None, "--month-published", "-m"),
     severity: str | None = typer.Option(None, "--severity", "-s"),
     export: str | None = typer.Option(None, "--export", "-x"),
-    filename: str | None = typer.Option(None, "--filename", "-f")
+    filename: str | None = typer.Option(None, "--filename", "-f"),
 ):
     try:
         clean_ecosystem = ecosystem.strip().lower()
-        validate_inputs(clean_ecosystem, year, month, severity, package, version, export)
+        validate_inputs(
+            clean_ecosystem, year, month, severity, package, version, export
+        )
         data = []
 
         if package:
@@ -44,8 +52,10 @@ def search(
         output = format_vulnerabilities(data["data"])
 
         if export:
-            console.print(f"\n Found {len(data['data'])} results for {'package' if package else 'ecosystem'} [cyan]{package if package else clean_ecosystem}[/cyan]\n")
-            
+            console.print(
+                f"\n Found {len(data['data'])} results for {'package' if package else 'ecosystem'} [cyan]{package if package else clean_ecosystem}[/cyan]\n"
+            )
+
             if filename is None:
                 filename = f"vulns_export_{datetime.now():%Y-%m-%d_%H-%M-%S}"
 
@@ -54,10 +64,14 @@ def search(
             except Exception as e:
                 console.print(f"[red]Export failed:[/red] {e}")
                 raise typer.Exit(1)
-            
-            console.print(f"\n[green] ✓ Export completed[/green] [cyan]({filename}.{export})[/cyan]")
+
+            console.print(
+                f"\n[green] ✓ Export completed[/green] [cyan]({filename}.{export})[/cyan]"
+            )
         else:
-            console.print(f"\n Showing {len(data['data'])} results for {'package' if package else 'ecosystem'} [cyan]{package if package else clean_ecosystem}[/cyan]\n")
+            console.print(
+                f"\n Showing {len(data['data'])} results for {'package' if package else 'ecosystem'} [cyan]{package if package else clean_ecosystem}[/cyan]\n"
+            )
             console.print(output)
 
     except ValueError as e:
@@ -65,35 +79,51 @@ def search(
         raise typer.Exit(code=1)
 
 
-@app.command()
+@app.command(
+    help="Scan dependency files for known vulnerabilities.",
+    epilog="""
+Examples:
+
+  lastvuln scan requirements.txt
+
+  lastvuln scan pom.xml -x html -f report
+
+\n\nSupported files:\n
+  - requirements.txt\n
+  - pom.xml\n
+  - package-lock.json
+""",
+)
 def scan(
     file: str = typer.Argument(...),
     filename: str | None = typer.Option(None, "--filename", "-f"),
-    export: str | None = typer.Option(None, "--export", "-x")
+    export: str | None = typer.Option(None, "--export", "-x"),
 ):
-   try:
-       path = validate_file(file)
-       ecosystem = get_ecosystem(path)
+    try:
+        path = validate_file(file)
+        ecosystem = get_ecosystem(path)
 
-       if not ecosystem:
+        if not ecosystem:
             console.print("\n[gray]No results found.[/gray]")
             return
 
-       packages = get_packages(path, ecosystem)
-       data = get_vulns(packages, ecosystem)
-       
-       if data["status"] != 200:
+        packages = get_packages(path, ecosystem)
+        data = get_vulns(packages, ecosystem)
+
+        if data["status"] != 200:
             console.print(f"\n[red]{data['message']}[/red]")
             return
 
-       if not data["data"]:
+        if not data["data"]:
             console.print("\n[gray]No results found.[/gray]")
             return
 
-       output = format_vulnerabilities(data["data"])
+        output = format_vulnerabilities(data["data"])
 
-       if export:
-            console.print(f"\n Found {len(data['data'])} results for file [cyan]{file}[/cyan]\n")
+        if export:
+            console.print(
+                f"\n Found {len(data['data'])} results for file [cyan]{file}[/cyan]\n"
+            )
 
             if filename is None:
                 filename = f"vulns_export_{datetime.now():%Y-%m-%d_%H-%M-%S}"
@@ -104,14 +134,18 @@ def scan(
                 console.print(f"[red]Export failed:[/red] {e}")
                 raise typer.Exit(1)
 
-            console.print(f"\n[green] ✓ Export completed[/green] [cyan]({filename}.{export})[/cyan]")
-       else:
-            console.print(f"\n Showing {len(data['data'])} results for file [cyan]{file}[/cyan]\n")
+            console.print(
+                f"\n[green] ✓ Export completed[/green] [cyan]({filename}.{export})[/cyan]"
+            )
+        else:
+            console.print(
+                f"\n Showing {len(data['data'])} results for file [cyan]{file}[/cyan]\n"
+            )
             console.print(output)
 
-   except Exception as e:
-       console.print(f"\n [red]Error:[/red] {e}")
-       raise typer.Exit(code=1)
+    except Exception as e:
+        console.print(f"\n [red]Error:[/red] {e}")
+        raise typer.Exit(code=1)
 
 
 def main():

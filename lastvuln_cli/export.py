@@ -72,6 +72,8 @@ def export_markdown(data: list[dict], filename: str):
                 severities[severity] += 1
             else:
                 severities["none"] += 1
+        if item["package"]:
+            item["package"] = item["package"][:30]
 
         values = [str(item.get(header, "")) for header in headers]
         rows.append("| " + " | ".join(values) + " |\n")
