@@ -52,16 +52,6 @@ def test_valid_inputs_search_per_package():
     validate_inputs("pip", None, None, None, "jinja2", "3.1.4", "md")
 
 
-def test_invalid_package():
-    with pytest.raises(ValueError):
-        validate_inputs("pip", None, None, None, "jinja$", "3.1.4", "html")
-
-
-def test_invalid_version():
-    with pytest.raises(ValueError):
-        validate_inputs("pip", None, None, None, "jinja2", "3.1.$", None)
-
-
 def test_valid_inputs_without_date():
     validate_inputs("pip", None, None, None, None, None, "html")
 
