@@ -66,17 +66,17 @@ lastvuln scan [OPTIONS] FILE
 
 ### Params 
 
-| Param | Search type | Description |
-|:---|:---|:---|
-| `-e, --ecosystem` | Ecosystem, package | Search by package ecosystem. |
-| `-n, --n_rows` | Ecosystem, package | Number of rows displayed in console. |
-| `-y, --year` | Ecosystem | Vulnerability publication year. |
-| `-m, --month` | Ecosystem | Vulnerability publication month. |
-| `-s, --severity` | Ecosystem | Vulnerability severity level. |
-| `-p, --package` | Package | Search by package name. |
-| `-v, --version` | Package | Package version. |
-| `-x, --export` | Ecosystem, package | Export vulnerabilities to reports. |
-| `-f, --filename` | Ecosystem, package | Custom export filename. |
+| Short | Long | Search type | Description |
+|:---|:---|:---|:---|
+| `-e` | `--ecosystem` | Ecosystem, package | Search by package ecosystem. |
+| `-n` | `--n_rows` | Ecosystem, package | Number of rows displayed in console. |
+| `-y` | `--year` | Ecosystem | Vulnerability publication year. |
+| `-m` | `--month` | Ecosystem | Vulnerability publication month. |
+| `-s` | `--severity` | Ecosystem | Vulnerability severity level. |
+| `-p` | `--package` | Package | Search by package name. |
+| `-v` | `--version` | Package | Package version. |
+| `-x` | `--export` | Ecosystem, package | Export vulnerabilities to reports. |
+| `-f` | `--filename` | Ecosystem, package | Custom export filename. |
 
 ### Examples 
 

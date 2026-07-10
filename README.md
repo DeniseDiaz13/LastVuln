@@ -67,17 +67,17 @@ lastvuln scan [OPCIONES] ARCHIVO
 
 ### Parámetros 
 
-| Parámetro | Tipo de búsqueda compatible | Descripción |
-|:---|:---|:---|
-| `-e, --ecosystem` | Ecosistema, paquete | Ecosistema de paquetes a consultar (debe indicarse para ambos tipos de búsqueda). |
-| `-n, --n_rows` | Ecosistema, paquete | Número de filas que se mostrarán en consola. |
-| `-y, --year` | Ecosistema | Año de publicación de las vulnerabilidades. |
-| `-m, --month` | Ecosistema | Mes de publicación de las vulnerabilidades. |
-| `-s, --severity` | Ecosistema | Nivel de severidad de las vulnerabilidades. |
-| `-p, --package` | Paquete | Nombre del paquete a consultar. |
-| `-v, --version` | Paquete | Versión específica del paquete. |
-| `-x, --export` | Ecosistema, paquete | Exportación de vulnerabilidades para generación de reportes. |
-| `-f, --filename` | Ecosistema, paquete | Nombre personalizado del archivo generado durante la exportación. |
+| Corto | Largo | Tipo de búsqueda | Descripción |
+|:---|:--------------------------------------|:----------------------------|:---|
+| `-e` | `--ecosystem` | Ecosistema, paquete | Ecosistema de paquetes a consultar |
+| `-n` | `--n_rows` | Ecosistema, paquete | Número de filas que se mostrarán en consola. |
+| `-y` | `--year` | Ecosistema | Año de publicación de las vulnerabilidades. |
+| `-m` | `--month` | Ecosistema | Mes de publicación de las vulnerabilidades. |
+| `-s` | `--severity` | Ecosistema | Nivel de severidad de las vulnerabilidades. |
+| `-p` | `--package` | Paquete | Nombre del paquete a consultar. |
+| `-v` | `--version` | Paquete | Versión específica del paquete. |
+| `-x` | `--export` | Ecosistema, paquete | Exportación de vulnerabilidades para reportes. |
+| `-f` | `--filename` | Ecosistema, paquete | Nombre personalizado para el archivo exportado. |
 
 ### Ejemplos de uso
 
