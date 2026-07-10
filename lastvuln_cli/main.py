@@ -92,8 +92,23 @@ def scan(
 
        output = format_vulnerabilities(data["data"])
 
-       console.print(f"\n Showing {len(data['data'])} results for [cyan]{file}[/cyan]\n")
-       console.print(output)
+       if export:
+            console.print(f"\n Found {len(data['data'])} results for file [cyan]{file}[/cyan]\n")
+
+            if filename is None:
+                filename = f"vulns_export_{datetime.now():%Y-%m-%d_%H-%M-%S}"
+
+            try:
+                export_vulns(export, data["data"], filename)
+            except Exception as e:
+                console.print(f"[red]Export failed:[/red] {e}")
+                raise typer.Exit(1)
+
+            console.print(f"\n[green] ✓ Export completed[/green] [cyan]({filename}.{export})[/cyan]")
+       else:
+            console.print(f"\n Showing {len(data['data'])} results for file [cyan]{file}[/cyan]\n")
+            console.print(output)
+
    except Exception as e:
        console.print(f"\n [red]Error:[/red] {e}")
        raise typer.Exit(code=1)
