@@ -3,6 +3,7 @@ from rich.console import Console
 from .cache import init_db
 from .client import search_for_ecosystem, search_for_package
 from .formatter import format_vulnerabilities
+from .scanner import get_packages, get_vulns, get_ecosystem
 from .validate_inputs import *
 from .export import *
 
@@ -28,7 +29,7 @@ def search(
         data = []
 
         if package:
-            data = search_for_package(version, package, ecosystem, n_rows)
+            data = search_for_package(version, package, clean_ecosystem, n_rows)
         else:
             data = search_for_ecosystem(clean_ecosystem, n_rows, year, month, severity)
 
@@ -62,6 +63,40 @@ def search(
     except ValueError as e:
         console.print(f"\n [red]Error:[/red] {e}")
         raise typer.Exit(code=1)
+
+
+@app.command()
+def scan(
+    file: str = typer.Argument(...),
+    filename: str | None = typer.Option(None, "--filename", "-f"),
+    export: str | None = typer.Option(None, "--export", "-x")
+):
+   try:
+       path = validate_file(file)
+       ecosystem = get_ecosystem(path)
+
+       if not ecosystem:
+            console.print("\n[gray]No results found.[/gray]")
+            return
+
+       packages = get_packages(path, ecosystem)
+       data = get_vulns(packages, ecosystem)
+       
+       if data["status"] != 200:
+            console.print(f"\n[red]{data['message']}[/red]")
+            return
+
+       if not data["data"]:
+            console.print("\n[gray]No results found.[/gray]")
+            return
+
+       output = format_vulnerabilities(data["data"])
+
+       console.print(f"\n Showing {len(data['data'])} results for [cyan]{file}[/cyan]\n")
+       console.print(output)
+   except Exception as e:
+       console.print(f"\n [red]Error:[/red] {e}")
+       raise typer.Exit(code=1)
 
 
 def main():

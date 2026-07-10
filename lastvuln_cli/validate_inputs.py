@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 import re
 
 
@@ -15,10 +16,14 @@ def validate_inputs(
 
     if year is not None or month is not None or severity is not None:
         if package is not None:
-            raise ValueError(f"[red]Package parameter is not supported with parameters year, month and severity[/red]")
+            raise ValueError(
+                f"[red]Package parameter is not supported with parameters year, month and severity[/red]"
+            )
         if version is not None:
-            raise ValueError(f"[red]Version parameter is not supported with parameters year, month and severity[/red]")
-    
+            raise ValueError(
+                f"[red]Version parameter is not supported with parameters year, month and severity[/red]"
+            )
+
     if (year is None) != (month is None):
         raise ValueError(f"[red]Year and month must be provided together[/red]")
 
@@ -30,10 +35,10 @@ def validate_inputs(
 
     if severity is not None:
         validate_input_severity(severity)
-    
+
     if (package is None) != (version is None):
         raise ValueError(f"[red]Package and version must be provided together[/red]")
-     
+
     if package is not None:
         validate_input_package(package)
 
@@ -97,9 +102,6 @@ def validate_input_package(package: str):
     if " " in package:
         raise ValueError(f"[red]Package name cannot contain spaces[/red]")
 
-    if not re.fullmatch(r"[A-Za-z0-9._/@+-]+", package):
-        raise ValueError(f"[red]Invalid package name[/red]")
-
 
 def validate_input_version(version: str):
     if not version.strip():
@@ -107,9 +109,6 @@ def validate_input_version(version: str):
 
     if " " in version:
         raise ValueError(f"[red]Version cannot contain spaces[/red]")
-
-    if not re.fullmatch(r"[A-Za-z0-9._+\-]+", version):
-        raise ValueError(f"[red]Invalid version[/red]")
 
 
 def validate_input_export(export: str):
@@ -119,3 +118,27 @@ def validate_input_export(export: str):
         raise ValueError(
             f"[red]Export {export} is not a possible value. Must be one of the following: {", ".join(valid_inputs)}[/red]"
         )
+
+
+def validate_file(file: str) -> Path:
+    path = Path(file)
+
+    if not path.exists():
+        raise ValueError(f"File [cyan]{file}[/cyan] not found")
+
+    if not path.is_file():
+        raise ValueError(f"Path [cyan]{file}[/cyan] is not a file")
+
+    valid_files = [
+        "requirements.txt",
+        "pom.xml",
+        "package-lock.json",
+    ]
+
+    if path.name not in valid_files:
+        raise ValueError(
+            f"Unsupported file [cyan]{path.name}[/cyan]. "
+            f"Supported files: {', '.join(valid_files)}"
+        )
+
+    return path
