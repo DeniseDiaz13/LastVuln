@@ -331,9 +331,10 @@ def test_search_for_package_osv_error(mock_post):
     mock_post.assert_called_once()
 
 
-@patch("lastvuln_cli.client.GITHUB_TOKEN", None)
-def test_token_not_configured():
-    result = search_for_ecosystem("pip", 1, 2024, 5)
+def test_token_not_configured(monkeypatch):
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+
+    result = search_for_ecosystem("npm", 1, 2026, 6)
 
     assert result["status"] == 500
     assert result["message"] == "GitHub token not configured"

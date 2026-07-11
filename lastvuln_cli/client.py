@@ -9,8 +9,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 load_dotenv()
 
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-
 
 def build_month_range(year: int, month: int) -> str:
     last_day = monthrange(year, month)[1]
@@ -55,6 +53,8 @@ def parse_json(response) -> dict[str, Any]:
 def consult_per_ecosystem(
     ecosystem: str, n: int, year: int | None, month: int | None, severity: str | None
 ) -> dict[str, Any]:
+    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+
     if not GITHUB_TOKEN:
         return {"status": 500, "message": "GitHub token not configured", "data": []}
 
@@ -142,6 +142,8 @@ def fetch_advisory(ghsa_id: str, headers: dict[str, str]) -> dict[str, Any]:
 
 
 def consult_per_package(ids: list[str]) -> dict[str, Any]:
+    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+
     if not GITHUB_TOKEN:
         return {
             "status": 500,

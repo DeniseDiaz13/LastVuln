@@ -66,3 +66,8 @@ def git_advisory_data():
             },
         ],
     }
+
+
+@pytest.fixture(autouse=True)
+def mock_github_token(monkeypatch):
+    monkeypatch.setenv("GITHUB_TOKEN", "fake_token")
