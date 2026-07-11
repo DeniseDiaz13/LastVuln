@@ -28,7 +28,7 @@ relevant vulnerability information from packages and facilitating technical deci
 
 - **Search ecosystem:** Displays the latest vulnerabilities from a specific ecosystem, ordered by publication date.
 - **Search package:** Displays the latest vulnerabilities from a specific package, ordered by publication date.
-- **Scan dependency files:** Scans dependency files.
+- **Scan dependency files.**
 - Integration with OSV API.
 - Integration with GitHub Advisory Database.
 - Local SQLite cache.
@@ -60,11 +60,13 @@ pip install -r requirements.txt
 
 ```bash
 lastvuln search [OPTIONS]
+```
 
+```bash
 lastvuln scan [OPTIONS] FILE 
 ```
 
-### Params 
+### Options 
 
 | Short | Long | Search type | Description |
 |:---|:---|:---|:---|
@@ -82,11 +84,17 @@ lastvuln scan [OPTIONS] FILE
 
 ```bash
 lastvuln search -e pip -p jinja2 -v 3.1.4
+```
 
+```bash
 lastvuln search -e npm -n 5 -x html
+```
 
+```bash
 lastvuln scan requirements.txt
+```
 
+```bash
 lastvuln scan pom.xml -x md -f report_maven
 ```
 

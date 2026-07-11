@@ -9,7 +9,7 @@ Investiga las últimas vulnerabilidades publicadas y escanea tus archivos de paq
 ## ¿Por qué Lastvuln CLI?
 
 Al desarrollar un proyecto, la selección y actualización de paquetes requiere mantener 
-un equilibrio entre estabilidad, compatibilidad y seguridad y las vulnerabilidades conocidas 
+un equilibrio entre estabilidad, compatibilidad y seguridad. Las vulnerabilidades conocidas 
 en librerías pueden convertirse en vectores de ataque si no son identificadas y gestionadas
 oportunamente.
 
@@ -29,7 +29,7 @@ sobre vulnerabilidades de paquetes y facilitar la toma de decisiones técnicas.
 - **Búsqueda por ecosistema:** muestra las últimas vulnerabilidades de un ecosistema determinado, 
 ordenadas por fecha de publicación.
 - **Búsqueda por paquete:** muestra las últimas vulnerabilidades del paquete indicado, ordenadas por fecha de publicación.
-- **Escaneo de archivos de paquetes:** escaneo de archivos de paquetes.
+- **Escaneo de archivos de paquetes.**
 - Integración con OSV API.
 - Integración con GitHub Advisory Database.
 - Caché local SQLite.
@@ -61,11 +61,13 @@ pip install -r requirements.txt
 
 ```bash
 lastvuln search [OPCIONES]
+```
 
+```bash
 lastvuln scan [OPCIONES] ARCHIVO 
 ```
 
-### Parámetros 
+### Opciones 
 
 | Corto | Largo | Tipo de búsqueda | Descripción |
 |:---|:--------------------------------------|:----------------------------|:---|
@@ -83,11 +85,17 @@ lastvuln scan [OPCIONES] ARCHIVO
 
 ```bash
 lastvuln search -e pip -p jinja2 -v 3.1.4
+```
 
+```bash
 lastvuln search -e npm -n 5 -x html
+```
 
+```bash
 lastvuln scan requirements.txt
+```
 
+```bash
 lastvuln scan pom.xml -x md -f report_maven
 ```
 
