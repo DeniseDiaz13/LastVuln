@@ -1,49 +1,48 @@
-[English](README.en.md)
+[Español](README.md)
 
 # Lastvuln CLI
 
-## Buscador y escaneador de vulnerabilidades por ecosistema de paquetes
+## Vulnerability search and scanner by package ecosystem
 
-Investiga las últimas vulnerabilidades publicadas y escanea tus archivos de paquetes.
+Investigate the latest published vulnerabilities and scan your dependency files.
 
-## ¿Por qué Lastvuln CLI?
+## Why Lastvuln CLI?
 
-Al desarrollar un proyecto, la selección y actualización de paquetes requiere mantener 
-un equilibrio entre estabilidad, compatibilidad y seguridad. Las vulnerabilidades conocidas 
-en librerías pueden convertirse en vectores de ataque si no son identificadas y gestionadas
-oportunamente.
+When developing a project, selecting and updating packages requires maintaining a 
+balance between stability, compatibility, and security. Known vulnerabilities in 
+libraries can become attack vectors if they are not identified and managed in a
+timely manner.
 
-Lastvuln nació a partir de una necesidad real al trabajar con una aplicación web heredada 
-con paquetes en versiones antiguas, donde se presentó una fuga de información. Las herramientas 
-convencionales de análisis tardaban demasiado debido a que realizaban escaneos completos del proyecto
-y agregaban múltiples funcionalidades que aumentaban su complejidad de uso, además del consumo de 
-recursos requerido para su ejecución.
+Lastvuln was born from a real need while working with a legacy web application with 
+outdated packages, where an information leak occurred. Conventional analysis tools
+took too long because they performed complete project scans and added multiple features 
+that increased their complexity of use, in addition to the resources required for their 
+execution.
 
-Además, aunque los editores de código detectaban vulnerabilidades en algunos paquetes, la información 
-proporcionada no siempre era suficiente para tomar decisiones rápidas.
-Por esta razón surgió la idea de crear una herramienta ligera, enfocada en obtener información relevante 
-sobre vulnerabilidades de paquetes y facilitar la toma de decisiones técnicas.
+Additionally, although code editors could detect vulnerabilities in some packages, the 
+information provided was not always enough to make quick decisions.
+For this reason, the idea of creating a lightweight tool emerged, focused on obtaining 
+relevant vulnerability information from packages and facilitating technical decision-making.
 
-## Características 
+## Features
 
-- **Búsqueda por ecosistema:** muestra las últimas vulnerabilidades de un ecosistema determinado, 
-ordenadas por fecha de publicación.
-- **Búsqueda por paquete:** muestra las últimas vulnerabilidades del paquete indicado, ordenadas por fecha de publicación.
-- **Escaneo de archivos de paquetes.**
-- Integración con OSV API.
-- Integración con GitHub Advisory Database.
-- Caché local SQLite.
-- Exportaciones a Markdown, HTML, JSON, CSV y Excel.
+- **Search ecosystem:** Displays the latest vulnerabilities from a specific ecosystem, ordered by publication date.
+- **Search package:** Displays the latest vulnerabilities from a specific package, ordered by publication date.
+- **Scan dependency files.**
+- Integration with OSV API.
+- Integration with GitHub Advisory Database.
+- Local SQLite cache.
+- Exporting to Markdown, HTML, JSON, CSV, and Excel.
 
-### Ecosistemas soportados del modo escaner
+### Supported ecosystems for scan mode
 
-| Ecosistema | Archivo de paquetes |
-|-----------|---------------|
-| PyPI      | requirements.txt |
-| Maven     | pom.xml |
+| Ecosystem | Dependency file   |
+| --------- | ----------------- |
+| PyPI      | requirements.txt  |
+| Maven     | pom.xml           |
 | npm       | package-lock.json |
 
-## Instalación 
+## Installation  
 
 ```bash 
 git clone https://github.com/DeniseDiaz13/LastVuln.git
@@ -61,31 +60,31 @@ pip install -e .
 lastvuln --help
 ```
 
-## Uso
+## Use
 
 ```bash
-lastvuln search [OPCIONES]
+lastvuln search [OPTIONS]
 ```
 
 ```bash
-lastvuln scan [OPCIONES] ARCHIVO 
+lastvuln scan [OPTIONS] FILE 
 ```
 
-### Opciones 
+### Options 
 
-| Corto | Largo | Tipo de búsqueda | Descripción |
-|:---|:--------------------------------------|:----------------------------|:---|
-| `-e` | `--ecosystem` | Ecosistema, paquete | Ecosistema de paquetes a consultar |
-| `-n` | `--n_rows` | Ecosistema, paquete | Número de filas que se mostrarán en consola. |
-| `-y` | `--year` | Ecosistema | Año de publicación de las vulnerabilidades. |
-| `-m` | `--month` | Ecosistema | Mes de publicación de las vulnerabilidades. |
-| `-s` | `--severity` | Ecosistema | Nivel de severidad de las vulnerabilidades. |
-| `-p` | `--package` | Paquete | Nombre del paquete a consultar. |
-| `-v` | `--version` | Paquete | Versión específica del paquete. |
-| `-x` | `--export` | Ecosistema, paquete | Exportación de vulnerabilidades para reportes. |
-| `-f` | `--filename` | Ecosistema, paquete | Nombre personalizado para el archivo exportado. |
+| Short | Long | Search type | Description |
+|:---|:---|:---|:---|
+| `-e` | `--ecosystem` | Ecosystem, package | Search by package ecosystem. |
+| `-n` | `--n_rows` | Ecosystem, package | Number of rows displayed in console. |
+| `-y` | `--year` | Ecosystem | Vulnerability publication year. |
+| `-m` | `--month` | Ecosystem | Vulnerability publication month. |
+| `-s` | `--severity` | Ecosystem | Vulnerability severity level. |
+| `-p` | `--package` | Package | Search by package name. |
+| `-v` | `--version` | Package | Package version. |
+| `-x` | `--export` | Ecosystem, package | Export vulnerabilities to reports. |
+| `-f` | `--filename` | Ecosystem, package | Custom export filename. |
 
-### Ejemplos de uso
+### Examples 
 
 ```bash
 lastvuln search -e pip -p jinja2 -v 3.1.4
@@ -103,33 +102,33 @@ lastvuln scan requirements.txt
 lastvuln scan pom.xml -x md -f report_maven
 ```
 
-### Capturas de pantalla 
+### Screenshots 
 
-Búsqueda por paquete
+Search package
 ![Screenshot 1](docs/screenshots/screenshot_1.png) 
 
-Búsqueda por ecosistema NPM y exportación a formato HTML
+Search by NPM ecosystem and export to HTML format
 ![Screenshot 2](docs/screenshots/screenshot_2.png)
 ![Screenshot 3](docs/screenshots/screenshot_3.png)
 
-Escaneo de archivo requirements.txt
+Scanning a requirements.txt file
 ![Screenshot 4](docs/screenshots/screenshot_4.png)
 
-Búsqueda por ecosistema maven y exportación a formato Markdown
+Search by maven ecosystem and export to Markdown format
 ![Screenshot 5](docs/screenshots/screenshot_5.png)
 ![Screenshot 6](docs/screenshots/screenshot_6.png)
 
-## Variables de entorno
+## Environment variables 
 
-Crea un token de acceso personal de GitHub y configúralo en el archivo `.env`:
+Create a GitHub personal access token and configure it in the `.env` file:
 
 ```bash
-GITHUB_TOKEN="tu_token"
+GITHUB_TOKEN="your_token"
 ```
 
-## Pruebas automatizadas  
+## Tests  
 
-El proyecto cuenta con pruebas automatizadas para validar las funciones principales del cliente API,
-manejo de errores, caché local, procesamiento de archivos de paquetes y lógica del escáner.
+The project includes automated tests to validate the main API client functions, error handling, 
+local cache behavior, dependency file processing, and scanner logic.
 
 ![Screenshot 7](docs/screenshots/screenshot_tests.png)
